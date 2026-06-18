@@ -1,0 +1,13 @@
+{
+  "name": "시험지 지우개",
+  "short_name": "지우개",
+  "description": "시험지 컬러 펜 필기를 지워 오답노트용 시험지를 만듭니다.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#FCFBF8",
+  "theme_color": "#FCFBF8",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

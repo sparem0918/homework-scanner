@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>시험지 지우개</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#FCFBF8" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="시험지 지우개" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<style>
+  :root{
+    --paper:#FCFBF8; --ink:#22252A; --muted:#8A8F98; --hair:#E7E3DA;
+    --coral:#FF6B5E; --coral-press:#E85547; --card:#FFFFFF;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);}
+  body{min-height:100dvh;padding:env(safe-area-inset-top) 18px calc(env(safe-area-inset-bottom) + 18px);max-width:560px;margin:0 auto;}
+  header{padding:26px 2px 18px;}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;}
+  h1{font-size:30px;line-height:1.1;margin:0;letter-spacing:-.01em;font-weight:680;}
+  h1 .mark{position:relative;white-space:nowrap;}
+  h1 .mark::after{content:"";position:absolute;left:-2px;right:-2px;bottom:6px;height:11px;background:var(--coral);opacity:.28;z-index:-1;border-radius:2px;}
+  .sub{color:var(--muted);font-size:14.5px;line-height:1.5;margin:12px 2px 0;}
+  .drop{margin-top:22px;border:1.5px dashed var(--hair);border-radius:18px;background:var(--card);padding:30px 18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
+  .drop:active{border-color:var(--coral);background:#FFFCFB;}
+  .drop .ic{font-size:30px;}
+  .drop .t{margin-top:10px;font-weight:600;font-size:16px;}
+  .drop .h{margin-top:5px;color:var(--muted);font-size:13px;}
+  input[type=file]{display:none;}
+  .preview-wrap{margin-top:18px;display:none;}
+  .preview-wrap img{width:100%;border-radius:16px;display:block;border:1px solid var(--hair);}
+  .controls{margin-top:18px;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 2px;}
+  .row .label{font-size:14.5px;font-weight:560;}
+  .row .val{font-family:var(--mono);font-size:12px;color:var(--muted);}
+  input[type=range]{width:100%;accent-color:var(--coral);}
+  .hint{font-size:12.5px;color:var(--muted);line-height:1.5;margin:2px 2px 0;}
+  .go{width:100%;margin-top:16px;border:none;border-radius:14px;background:var(--coral);color:#fff;font-weight:700;font-size:17px;padding:16px;cursor:pointer;font-family:var(--sans);transition:background .12s,transform .06s;}
+  .go:active{background:var(--coral-press);transform:translateY(1px);}
+  .go:disabled{background:#D9D6CF;color:#fff;cursor:default;}
+  .result{margin-top:24px;display:none;}
+  .result h2{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;}
+  .compare{position:relative;width:100%;border-radius:16px;overflow:hidden;border:1px solid var(--hair);touch-action:none;user-select:none;background:#fff;}
+  .compare img{display:block;width:100%;pointer-events:none;}
+  .compare .after{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;clip-path:inset(0 0 0 50%);}
+  .compare .handle{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--coral);transform:translateX(-1px);}
+  .compare .knob{position:absolute;top:50%;left:50%;width:38px;height:38px;border-radius:50%;background:#fff;border:2px solid var(--coral);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;color:var(--coral);font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+  .tag{position:absolute;top:10px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;background:rgba(34,37,42,.72);color:#fff;padding:3px 8px;border-radius:20px;}
+  .tag.l{left:10px;} .tag.r{right:10px;}
+  .save{display:block;width:100%;margin-top:14px;text-align:center;text-decoration:none;border:1.5px solid var(--ink);border-radius:14px;padding:14px;color:var(--ink);font-weight:660;font-size:16px;}
+  .save:active{background:#F4F1EA;}
+  .savehint{font-size:12px;color:var(--muted);text-align:center;margin-top:8px;}
+  footer{margin-top:30px;color:var(--muted);font-size:12px;line-height:1.6;}
+  .overlay{position:fixed;inset:0;background:rgba(252,251,248,.86);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:50;}
+  .spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--hair);border-top-color:var(--coral);animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .overlay p{font-family:var(--mono);font-size:13px;color:var(--ink);letter-spacing:.04em;}
+  @media (prefers-reduced-motion:reduce){.spin{animation:none;}}
+</style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">오답노트 만들기 · 서버 없이</p>
+    <h1>시험지 <span class="mark">지우개</span></h1>
+    <p class="sub">찍은 시험지에서 컬러 펜 필기를 지웁니다. 모든 처리가 이 휴대폰 안에서만 일어나고, 사진은 어디로도 전송되지 않습니다.</p>
+  </header>
+
+  <label class="drop" id="drop">
+    <div class="ic">📄</div>
+    <div class="t">시험지 촬영 또는 사진 선택</div>
+    <div class="h">한 장씩 또렷하게 찍어 주세요</div>
+    <input type="file" id="file" accept="image/*" capture="environment" />
+  </label>
+
+  <div class="preview-wrap" id="previewWrap">
+    <img id="preview" alt="선택한 시험지" />
+  </div>
+
+  <div class="controls" id="controls" style="display:none">
+    <div class="row">
+      <span class="label">지우는 세기</span>
+      <span class="val" id="strengthVal">보통</span>
+    </div>
+    <input type="range" id="strength" min="10" max="45" value="22" />
+    <p class="hint">잘 안 지워지면 오른쪽으로, 인쇄 글씨가 흐려지면 왼쪽으로 옮겨 보세요.</p>
+
+    <div class="row" style="margin-top:10px">
+      <label class="label" for="pencil" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0">
+        <input type="checkbox" id="pencil" style="width:18px;height:18px;accent-color:var(--coral)" />
+        연필도 지우기 <span style="color:var(--muted);font-weight:400">(흐린 연필)</span>
+      </label>
+    </div>
+    <div id="pencilWrap" style="display:none">
+      <div class="row">
+        <span class="label">연필 강도</span>
+        <span class="val" id="pencilVal">보통</span>
+      </div>
+      <input type="range" id="pencilStrength" min="20" max="85" value="55" />
+      <p class="hint">강하게 할수록 진한 연필까지 지우지만 인쇄 글씨가 흐려질 위험이 커집니다. 검정 볼펜은 이 방법으로도 지워지지 않습니다.</p>
+    </div>
+  </div>
+
+  <button class="go" id="go" disabled>필기 지우기</button>
+
+  <section class="result" id="result">
+    <h2>전 · 후 비교 — 손잡이를 밀어 보세요</h2>
+    <div class="compare" id="compare">
+      <img id="before" alt="원본" />
+      <img id="after" class="after" alt="지운 결과" />
+      <span class="tag l">전</span>
+      <span class="tag r">후</span>
+      <div class="handle" id="handle"></div>
+      <div class="knob" id="knob">⇄</div>
+    </div>
+    <a class="save" id="save" download="erased.png">결과 저장</a>
+    <p class="savehint">저장이 안 되면 결과 이미지를 길게 눌러 "사진에 저장"을 선택하세요.</p>
+  </section>
+
+  <footer>
+    파랑·빨강·초록 같은 <b>컬러 잉크</b>를 지웁니다. <b>연필도 지우기</b>를 켜면 흐린 연필도
+    어느 정도 지워집니다. 다만 <b>검은 볼펜</b>은 인쇄 글씨와 색이 같아 이 방식으로는
+    지워지지 않습니다(그건 AI 서버 버전이 필요합니다).
+  </footer>
+
+  <div class="overlay" id="overlay">
+    <div class="spin"></div>
+    <p>지우는 중…</p>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const fileInput = $("file"), preview = $("preview"), previewWrap = $("previewWrap");
+  const controls = $("controls"), strength = $("strength"), strengthVal = $("strengthVal");
+  const go = $("go"), overlay = $("overlay"), result = $("result");
+
+  let bitmap = null;           // 원본 ImageBitmap (EXIF 회전 적용됨)
+  let beforeURL = null;
+
+  fileInput.addEventListener("change", async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      // EXIF 회전을 적용해서 불러오기 (폰 사진이 눕는 문제 방지)
+      bitmap = await createImageBitmap(f, { imageOrientation: "from-image" });
+    } catch {
+      bitmap = await createImageBitmap(f);
+    }
+    if (beforeURL) URL.revokeObjectURL(beforeURL);
+    beforeURL = URL.createObjectURL(f);
+    preview.src = beforeURL;
+    previewWrap.style.display = "block";
+    controls.style.display = "block";
+    result.style.display = "none";
+    go.disabled = false;
+  });
+
+  strength.addEventListener("input", () => {
+    const v = +strength.value;
+    strengthVal.textContent = v < 18 ? "약하게" : v > 30 ? "강하게" : "보통";
+  });
+
+  $("pencil").addEventListener("change", () => {
+    $("pencilWrap").style.display = $("pencil").checked ? "block" : "none";
+  });
+  $("pencilStrength").addEventListener("input", () => {
+    const v = +$("pencilStrength").value;
+    $("pencilVal").textContent = v < 40 ? "약하게" : v > 65 ? "강하게" : "보통";
+  });
+
+  go.addEventListener("click", () => {
+    if (!bitmap) return;
+    overlay.style.display = "flex";
+    go.disabled = true;
+    // 화면이 잠깐 그려지도록 다음 프레임에 처리
+    requestAnimationFrame(() => setTimeout(runErase, 30));
+  });
+
+  function runErase(){
+    try {
+      // 너무 큰 사진은 줄여서 처리
+      const MAX = 2400;
+      let w = bitmap.width, h = bitmap.height;
+      const longest = Math.max(w, h);
+      if (longest > MAX){ const s = MAX / longest; w = Math.round(w*s); h = Math.round(h*s); }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(bitmap, 0, 0, w, h);
+
+      const img = ctx.getImageData(0, 0, w, h);
+      const d = img.data;
+      const satThresh = (+strength.value) / 100;   // 0.10 ~ 0.45
+      const pencilOn = $("pencil").checked;
+      const pencilFloor = 200 - (+$("pencilStrength").value);  // 진한 연필일수록 낮은 값까지 제거
+
+      for (let i = 0; i < d.length; i += 4){
+        const r = d[i], g = d[i+1], b = d[i+2];
+        const max = Math.max(r,g,b), min = Math.min(r,g,b);
+        const sat = max === 0 ? 0 : (max - min) / max;   // HSV 채도
+        if (sat > satThresh && max > 60){
+          // 유채색 잉크(파랑/빨강/초록 등) -> 흰색
+          d[i] = d[i+1] = d[i+2] = 255;
+        } else if (max > 238 && sat < 0.06){
+          // 종이 그림자/얼룩 정리. 인쇄 글씨는 어두워서 영향 없음.
+          d[i] = d[i+1] = d[i+2] = 255;
+        } else if (pencilOn && sat < 0.14 && max > pencilFloor && max < 238){
+          // 흐린 연필(중간 회색) -> 흰색. 더 진한 인쇄 글씨(max <= pencilFloor)는 보존.
+          d[i] = d[i+1] = d[i+2] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+
+      const url = canvas.toDataURL("image/png");
+      showResult(beforeURL, url);
+    } catch (err){
+      alert("처리 중 문제가 발생했습니다: " + err);
+    } finally {
+      overlay.style.display = "none";
+      go.disabled = false;
+    }
+  }
+
+  function showResult(beforeUrl, afterUrl){
+    $("before").src = beforeUrl;
+    $("after").src = afterUrl;
+    $("save").href = afterUrl;
+    result.style.display = "block";
+    setSlider(50);
+    result.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // 전/후 비교 슬라이더
+  const compare = $("compare"), handle = $("handle"), knob = $("knob"), after = $("after");
+  function setSlider(pct){
+    pct = Math.max(0, Math.min(100, pct));
+    after.style.clipPath = `inset(0 0 0 ${pct}%)`;
+    handle.style.left = pct + "%"; knob.style.left = pct + "%";
+  }
+  let dragging = false;
+  function fromEvent(e){
+    const r = compare.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    setSlider((x / r.width) * 100);
+  }
+  compare.addEventListener("pointerdown", (e)=>{ dragging = true; fromEvent(e); });
+  window.addEventListener("pointermove", (e)=>{ if(dragging){ fromEvent(e); e.preventDefault(); } }, { passive:false });
+  window.addEventListener("pointerup", ()=> dragging = false);
+</script>
+</body>
+</html>
